@@ -1,9 +1,10 @@
 using System.Globalization;
 using System.Net;
+using System.Text;
 using System.Text.Json;
-using ExchangeConverter.Domains;
+using CurrencyConverter.Domains;
 
-namespace ExchangeConverter.Services;
+namespace CurrencyConverter.Services;
 
 public class ExchangeApi
 {
@@ -11,10 +12,6 @@ public class ExchangeApi
 
     private static async Task<string?> Converter(string coins)
     {
-        var coinsList = new List<string>();
-        var coinsListSplit = coins.Split(",");
-
-
         var response = HttpClient.GetAsync($"https://economia.awesomeapi.com.br/json/last/{coins}");
         if (response.Result.StatusCode == HttpStatusCode.OK)
         {
@@ -55,9 +52,13 @@ public class ExchangeApi
             var readAsync = await response.Result.Content.ReadAsStringAsync();
 
             var combinationsMap = JsonSerializer.Deserialize<Dictionary<string, string>>(readAsync);
-            var filter = combinationsMap.Where(item => item.Key.StartsWith(currency, StringComparison.OrdinalIgnoreCase))
-                .ToDictionary(pair => pair.Key, pair => pair.Value);
-            combinationsList.AddRange(filter.Select(item => $"{item.Key}: {item.Value}"));
+            if (combinationsMap != null)
+            {
+                var filter = combinationsMap
+                    .Where(item => item.Key.StartsWith(currency, StringComparison.OrdinalIgnoreCase))
+                    .ToDictionary(pair => pair.Key, pair => pair.Value);
+                combinationsList.AddRange(filter.Select(item => $"{item.Key}: {item.Value}"));
+            }
         }
 
         return combinationsList;

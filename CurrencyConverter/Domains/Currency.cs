@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ExchangeConverter.Domains;
+namespace CurrencyConverter.Domains;
 
 public record Currency(
     [property: JsonPropertyName("code")] string Code,

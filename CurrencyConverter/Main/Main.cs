@@ -1,9 +1,9 @@
 using System.Text.RegularExpressions;
-using ExchangeConverter.Services;
+using CurrencyConverter.Services;
 
-namespace ExchangeConverter.Main;
+namespace CurrencyConverter.Main;
 
-public class Main
+public static class Main
 {
     public static async void Start()
     {
@@ -27,10 +27,10 @@ public class Main
                         MenuCombinations();
                         Console.Write($"\nEnter the option: ");
                         var optionCombinations = Console.ReadLine();
-                        
-                        if (optionCombinations.Equals("0"))
+
+                        if (optionCombinations is "0")
                             break;
-                        
+
                         Console.Write("\nEnter the current combination for converter: ");
                         var combinationOption = Console.ReadLine()!;
 
@@ -50,33 +50,39 @@ public class Main
                     Console.WriteLine();
                     foreach (var currency in currencies)
                     {
-                        Console.WriteLine($"Convert: {currency.Code} to {currency.CodeIn}: {currency.Ask}");
+                        Console.WriteLine(
+                            $"Convert: {currency.Code.Replace("R$ ", "")} " +
+                            $"to {currency.CodeIn.Replace("R$ ", "")}: " +
+                            $"{currency.Ask.Replace("R$ ", "")}");
                     }
 
                     Console.WriteLine();
                     break;
                 case "2":
                     var combinations = await ExchangeApi.GetAllCurrencyCombinations();
-                    
+
                     foreach (var combination in combinations)
                     {
                         Console.WriteLine(combination);
                     }
+
                     break;
                 case "3":
                     Console.Write("Enter the currency for filter: ");
-                    var currenctFilterOption = Console.ReadLine();
+                    var currencyFilterOption = Console.ReadLine();
                     patternCombination = @"^[A-Z]{3}$";
 
-                    if (Regex.IsMatch(currenctFilterOption,patternCombination))
+                    if (currencyFilterOption != null && Regex.IsMatch(currencyFilterOption, patternCombination))
                     {
-                        var filterCombinationByCurrency = await ExchangeApi.GetFilterCombinationByCurrency(currenctFilterOption);
+                        var filterCombinationByCurrency =
+                            await ExchangeApi.GetFilterCombinationByCurrency(currencyFilterOption);
 
                         foreach (var filter in filterCombinationByCurrency)
                         {
                             Console.WriteLine(filter);
                         }
                     }
+
                     break;
                 default:
                     Console.WriteLine("Invalid option...");
