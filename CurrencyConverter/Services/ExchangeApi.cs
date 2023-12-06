@@ -65,26 +65,17 @@ public class ExchangeApi
             {
                 var responseApi = await response.Result.Content.ReadAsStringAsync();
                 var test = JsonSerializer.Deserialize<List<Currency>>(responseApi);
-                
+
                 listCurrencies.AddRange(from currencyResponse in test
                     let valueCode = currencyResponse.Code
                     let valueCodeIn = currencyResponse.CodeIn
-                    let valueName = currencyResponse.Name
-                    let valueHighValue = decimal.Parse(currencyResponse.HighValue).ToString("C", specificCulture)
-                    let valueLowValue = decimal.Parse(currencyResponse.LowValue).ToString("C", specificCulture)
-                    let valueVarBid = decimal.Parse(currencyResponse.VarBid).ToString("C", specificCulture)
-                    let valueBid = decimal.Parse(currencyResponse.Bid).ToString("C", specificCulture)
                     let valueAsk = decimal.Parse(currencyResponse.Ask).ToString("C", specificCulture)
-                    let valueTimestamp = currencyResponse.Timestamp
-                    let valueCreatedDate = currencyResponse.CreatedDate
-                    select new Currency(valueCode, valueCodeIn, valueName, valueHighValue, valueLowValue, valueVarBid,
-                        valueBid, valueAsk, valueTimestamp, valueCreatedDate)
+                    select new Currency(valueCode, valueCodeIn, "", "", "", "",
+                        "", valueAsk, "", "")
                 );
             }
             else
-            {
                 resultList.Add($"Currency not found: {currency}\n");
-            }
         }
 
         resultList.AddRange(
