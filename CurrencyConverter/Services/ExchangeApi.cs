@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Net;
-using System.Text;
 using System.Text.Json;
 using CurrencyConverter.Domains;
 
@@ -8,19 +7,7 @@ namespace CurrencyConverter.Services;
 
 public class ExchangeApi
 {
-    private static readonly HttpClient HttpClient = new HttpClient();
-
-    private static async Task<string?> Converter(string coins)
-    {
-        var response = HttpClient.GetAsync($"https://economia.awesomeapi.com.br/json/last/{coins}");
-        if (response.Result.StatusCode == HttpStatusCode.OK)
-        {
-            var readerAsync = await response.Result.Content.ReadAsStringAsync();
-            return readerAsync;
-        }
-
-        return null;
-    }
+    private static readonly HttpClient HttpClient = new();
 
     public static async Task<List<string>> GetAllCurrencyCombinations()
     {
@@ -64,31 +51,46 @@ public class ExchangeApi
         return combinationsList;
     }
 
-    public static async Task<List<Currency>> GetCurrencies(string currencies)
+    public static async Task<string?> GetCurrencies(string currencies)
     {
-        var converter = await Converter(currencies);
         var listCurrencies = new List<Currency>();
+        var resultList = new List<string>();
+        var currencySplit = currencies.Split(",");
         var specificCulture = CultureInfo.CreateSpecificCulture("pt-BR");
 
-        if (converter != null)
+        foreach (var currency in currencySplit)
         {
-            var currenciesDictionary = JsonSerializer.Deserialize<Dictionary<string, Currency>>(converter);
-            if (currenciesDictionary != null)
-                listCurrencies.AddRange(from currency in currenciesDictionary
-                    let valueCode = currency.Value.Code
-                    let valueCodeIn = currency.Value.CodeIn
-                    let valueName = currency.Value.Name
-                    let valueHighValue = decimal.Parse(currency.Value.HighValue).ToString("C", specificCulture)
-                    let valueLowValue = decimal.Parse(currency.Value.LowValue).ToString("C", specificCulture)
-                    let valueVarBid = decimal.Parse(currency.Value.VarBid).ToString("C", specificCulture)
-                    let valueBid = decimal.Parse(currency.Value.Bid).ToString("C", specificCulture)
-                    let valueAsk = decimal.Parse(currency.Value.Ask).ToString("C", specificCulture)
-                    let valueTimestamp = currency.Value.Timestamp
-                    let valueCreatedDate = currency.Value.CreatedDate
+            var response = HttpClient.GetAsync($"https://economia.awesomeapi.com.br/json/{currency}/1");
+            if (response.Result.StatusCode == HttpStatusCode.OK)
+            {
+                var responseApi = await response.Result.Content.ReadAsStringAsync();
+                var test = JsonSerializer.Deserialize<List<Currency>>(responseApi);
+                
+                listCurrencies.AddRange(from currencyResponse in test
+                    let valueCode = currencyResponse.Code
+                    let valueCodeIn = currencyResponse.CodeIn
+                    let valueName = currencyResponse.Name
+                    let valueHighValue = decimal.Parse(currencyResponse.HighValue).ToString("C", specificCulture)
+                    let valueLowValue = decimal.Parse(currencyResponse.LowValue).ToString("C", specificCulture)
+                    let valueVarBid = decimal.Parse(currencyResponse.VarBid).ToString("C", specificCulture)
+                    let valueBid = decimal.Parse(currencyResponse.Bid).ToString("C", specificCulture)
+                    let valueAsk = decimal.Parse(currencyResponse.Ask).ToString("C", specificCulture)
+                    let valueTimestamp = currencyResponse.Timestamp
+                    let valueCreatedDate = currencyResponse.CreatedDate
                     select new Currency(valueCode, valueCodeIn, valueName, valueHighValue, valueLowValue, valueVarBid,
-                        valueBid, valueAsk, valueTimestamp, valueCreatedDate));
+                        valueBid, valueAsk, valueTimestamp, valueCreatedDate)
+                );
+            }
+            else
+            {
+                resultList.Add($"Currency not found: {currency}\n");
+            }
         }
 
-        return listCurrencies;
+        resultList.AddRange(
+            listCurrencies.Select(result => $"Convert: {result.Code.Replace("R$ ", "")} " +
+                                            $"to {result.CodeIn.Replace("R$ ", "")}: " +
+                                            $"{result.Ask.Replace("R$ ", "")}\n"));
+        return string.Join("", resultList);
     }
 }

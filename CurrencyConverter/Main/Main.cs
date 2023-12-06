@@ -20,7 +20,7 @@ public static class Main
             {
                 case "1":
                     var combinationList = new List<string>();
-                    var patternCombination = @"^[A-Z]{3}-[A-Z]{3}$";
+                    var patternCombination = @"^[a-zA-Z]{3}-[a-zA-Z]{3}$";
 
                     while (true)
                     {
@@ -31,56 +31,48 @@ public static class Main
                         if (optionCombinations is "0")
                             break;
 
-                        Console.Write("\nEnter the current combination for converter: ");
-                        var combinationOption = Console.ReadLine()!;
+                        switch (optionCombinations)
+                        {
+                            case "1":
+                                Console.Write("\nEnter the currency combination for conversion: ");
+                                var combinationOption = Console.ReadLine()!;
 
-                        if (Regex.IsMatch(combinationOption, patternCombination))
-                        {
-                            combinationList.Add(combinationOption);
-                        }
-                        else
-                        {
-                            Console.WriteLine("Invalid combination, enter the right pattern (AAA-BBB).");
+                                if (Regex.IsMatch(combinationOption, patternCombination))
+                                    combinationList.Add(combinationOption.ToUpper());
+                                else
+                                    Console.WriteLine("Invalid combination, enter the right pattern (AAA-BBB).");
+                                break;
+                            default:
+                                Console.WriteLine("Invalid option...");
+                                break;
                         }
                     }
-
+                    
                     var currencyCombinations = string.Join(",", combinationList);
-
                     var currencies = await ExchangeApi.GetCurrencies(currencyCombinations);
-                    Console.WriteLine();
-                    foreach (var currency in currencies)
-                    {
-                        Console.WriteLine(
-                            $"Convert: {currency.Code.Replace("R$ ", "")} " +
-                            $"to {currency.CodeIn.Replace("R$ ", "")}: " +
-                            $"{currency.Ask.Replace("R$ ", "")}");
-                    }
-
-                    Console.WriteLine();
+                    Console.WriteLine($"\n{currencies}");
+                    
                     break;
                 case "2":
                     var combinations = await ExchangeApi.GetAllCurrencyCombinations();
 
-                    foreach (var combination in combinations)
-                    {
-                        Console.WriteLine(combination);
-                    }
+                    Console.WriteLine();
+                    foreach (var combination in combinations) Console.WriteLine(combination);
+                    Console.WriteLine();
 
                     break;
                 case "3":
                     Console.Write("Enter the currency for filter: ");
                     var currencyFilterOption = Console.ReadLine();
-                    patternCombination = @"^[A-Z]{3}$";
+                    patternCombination = @"^[a-zA-Z]{3}$";
 
                     if (currencyFilterOption != null && Regex.IsMatch(currencyFilterOption, patternCombination))
                     {
                         var filterCombinationByCurrency =
-                            await ExchangeApi.GetFilterCombinationByCurrency(currencyFilterOption);
-
-                        foreach (var filter in filterCombinationByCurrency)
-                        {
-                            Console.WriteLine(filter);
-                        }
+                            await ExchangeApi.GetFilterCombinationByCurrency(currencyFilterOption.ToUpper());
+                        Console.WriteLine();
+                        foreach (var filter in filterCombinationByCurrency) Console.WriteLine(filter);
+                        Console.WriteLine();
                     }
 
                     break;
@@ -94,7 +86,7 @@ public static class Main
     private static void Menu()
     {
         var menuBar = new string('*', 50);
-        Console.WriteLine($"{menuBar}\n" +
+        Console.WriteLine($"\n{menuBar}\n" +
                           $"== Exchange Converter ==\n" +
                           $"    1 - Converter\n" +
                           $"    2 - List all combinations currencies\n" +
@@ -105,7 +97,10 @@ public static class Main
 
     private static void MenuCombinations()
     {
-        Console.WriteLine($"\n1 - Enter combinations for converter\n" +
-                          $"0 - Exit");
+        var menuBar = new string('*', 50);
+        Console.WriteLine($"\n{menuBar}\n" +
+                          $"    1 - Enter combinations for converter\n" +
+                          $"    0 - Exit\n" +
+                          $"{menuBar}");
     }
 }
